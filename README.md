@@ -27,9 +27,9 @@ make run
 ```
 
 Now, to run the script after the system boots, you'll have to follow a few but easy steps:
-1. Run `make config`, to set the appropriate parameters on the `apodwallpaper.service` and `apodwallpaper.py` files (absolute paths of files in case you're wondering).
+1. Run `make config`, to set the appropriate parameters on the *apodwallpaper.service* and *apodwallpaper.py* files (absolute paths of files, in case you're wondering).
 2. Now, to enable the *systemd* service, run the make command `make setup`, which does and runs the following (requires **sudo** permissions):
-   1. Places the service file inside `/etc/systemd/user` (requires **sudo**)
+   1. Places the service file inside */etc/systemd/user* (requires **sudo**)
    1. Assign the appropriate permission to the service file by running `sudo chmod 644 /etc/systemd/user/apodwallpaper.service`. (requires **sudo**)
    3. Reload the systemd daemon by running `systemctl --user daemon-reload`
    2. Enable the service by running `systemctl --user enable apodwallpaper.service`
@@ -38,6 +38,6 @@ And that's all, from now on, after the system boots, the script will be executed
 
 ## Credentials
 
-I'm using the default `api_key` on the APOD requests, since the constraints to use it are based on the user IP, which is not a problem for this project, since each user will only download the image once each day.
+I'm using the default **api_key** on the APOD requests, since the constraints to use it are based on the user IP, which is not a problem for this project, since each user will only download the image once each day.
 
 But, if you want to use your own key, you can request one on the [NASA Open APIs](https://api.nasa.gov/) web.

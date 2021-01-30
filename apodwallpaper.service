@@ -1,0 +1,10 @@
+[Unit]
+Description=apodwallpaper - Script to set the APOD image as wallpaper
+Documentation=https://github.com/charly98cma/apod-wallpaper
+
+[Service]
+Type=oneshot
+ExecStart=python /home/carlos/.dotfiles/.i3/wallpaper/APODWallpaper/apodwallpaper.py
+
+[Install]
+WantedBy=default.target

@@ -137,7 +137,7 @@ def setWallpaper(apodPath) -> int:
     print(" apodwallpaper.py -> setWallpaper - Running feh")
     # Run feh command using the photo local path
     res = subRun(
-        ['feh', '--no-fehbg', '--bg-center', apodPath]
+        ['feh', '--no-fehbg', '--bg-scale', apodPath]
     ).returncode
     # Check return code to print error message
     if res != 0:

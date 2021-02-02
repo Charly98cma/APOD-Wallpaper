@@ -137,7 +137,7 @@ def setWallpaper(apodPath) -> int:
     print(" apodwallpaper.py -> setWallpaper - Running feh")
     # Run feh command using the photo local path
     res = subRun(
-        ['feh', '--no-fehbg', '--bg-center', apodPath]
+        ['feh', '--no-fehbg', '--bg-scale', apodPath]
     ).returncode
     # Check return code to print error message
     if res != 0:
@@ -150,7 +150,7 @@ def setWallpaper(apodPath) -> int:
 def main():
     print(" apodwallpaper.py -> main - Init script")
     # Path to APOD image on local storage
-    apodPath = '/home/carlos/.dotfiles/.i3/wallpaper/APODWallpaper/apod-image.png'
+    apodPath = ''
     # Check if new APOD image available
     if checkAPOD(apodPath) == 1:
         if checkConn() == 1:

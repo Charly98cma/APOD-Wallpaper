@@ -4,7 +4,7 @@ Documentation=https://github.com/charly98cma/apod-wallpaper
 
 [Service]
 Type=oneshot
-ExecStart=python /home/carlos/.dotfiles/.i3/wallpaper/APODWallpaper/apodwallpaper.py
+ExecStart=
 
 [Install]
 WantedBy=default.target

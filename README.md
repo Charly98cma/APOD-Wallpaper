@@ -9,6 +9,7 @@ And, since we're all quite lazy, *systemd* will run the script on startup, after
 ## Dependencies
 
 Well, you need [Python 3](https://www.python.org/), [pip](https://pypi.org/project/pip/), the program [feh](https://feh.finalrewind.org/) and the Python [requests](https://requests.readthedocs.io/en/master/) library.
+To download a video, you'll also need [ffmpeg](https://ffmpeg.org/) and [youtube-dl](https://youtube-dl.org/)
 
 To install the *requests* library, you can run the following command and *pip* will install it using the [requirements.txt](https://github.com/Charly98cma/APOD-Wallpaper/blob/main/requirements.txt) file.
 

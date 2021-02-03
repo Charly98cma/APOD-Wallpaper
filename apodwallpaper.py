@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-
-from subprocess import run    as subRun
-from requests   import get    as reqGet
+from subprocess import run       as subRun
+from requests   import get       as reqGet
 from time       import sleep
 from datetime   import datetime
-from os.path    import isfile, getmtime, dirname, abspath
+from os         import remove
+from os.path    import isfile, getmtime, dirname, abspath, expanduser
+from glob       import glob
 
 
 """Function that checks if there's a new APOD image available
@@ -80,11 +81,19 @@ def getAPOD() -> str:
     # Status code check
     if response.status_code == 200:
         print(" apodwallpaper.py -> getAPOD - Download successful")
-        photo = response.json()['hdurl']
+        information = response.json()
+        if information.get('media_type') == "image":
+            photo = response.json()['hdurl']
+            isphoto = True
+        elif information.get('media_type') == "video":
+            url = response.json()['url']
+            isphoto = False
+        else:
+            raise RuntimeError("APOD is not an image or video")
     else:
         print(" apodwallpaper.py -> getAPOD - ERROR: Can't get the APOD image URL")
         print(" apodwallpaper.py -> getAPOD - ERROR CODE:", response.status_code)
-    return photo
+    return (isphoto, url)
 
 
 
@@ -101,22 +110,37 @@ Return value (int)
 1 - Error
 
 """
-def downloadAPOD(apodURL, apodPath) -> int:
+def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
     print(" apodwallpaper.py -> downloadAPOD - Downloading APOD image")
     result = 0
     # Download APOD image
-    response = reqGet(apodURL)
-    if response.status_code == 200:
-        print(" apodwallpaper.py -> downloadAPOD - Download successful")
-        # Write new image (overwriting the older one)
-        with open(apodPath, 'wb') as apodImage:
-            apodImage.write(response.content)
-            apodImage.truncate()
+    if apodIsImage:
+        response = reqGet(apodURL)
+        if response.status_code == 200:
+            print(" apodwallpaper.py -> downloadAPOD - Download successful")
+            # Write new image (overwriting the older one)
+            with open(apodPath, 'wb') as apodImage:
+                apodImage.write(response.content)
+                apodImage.truncate()
+        else:
+            # Error occurred => Print error messages
+            result = 1
+            print(" apodwallpaper.py -> downloadAPOD - ERROR: Download of APOD image failed")
+            print(" apodwallpaper.py -> downloadAPOD - ERROR CODE:", response.status_code)
     else:
-        # Error occurred => Print error messages
-        result = 1
-        print(" apodwallpaper.py -> downloadAPOD - ERROR: Download of APOD image failed")
-        print(" apodwallpaper.py -> downloadAPOD - ERROR CODE:", response.status_code)
+        print(" apodwallpaper.py -> downloadAPOD - Downloading APOD video")
+        ytdl = subRun(['youtube-dl', apodURL, '-o', '/var/tmp/video'])
+        if ytdl.returncode != 0:
+            result = 1
+            print(" apodwallpaper.py -> downloadAPOD - ERROR: Cannot download video with youtube-dl")
+            print(f" apodwallpaper.py -> downloadAPOD - stderr is: {ytdl.stderr.decode()}")
+        filename = glob("/var/tmp/video.*")[0]
+        ffmpeg = subRun(["ffmpeg", "-y", "-i", filename, "-vcodec", "png", "-ss", "11", "-vframes", "1", "-an", "-f", "rawvideo", apodPathi])
+        if ffmpeg.returncode != 0:
+            result = 1
+            print(" apodwallpaper.py -> downloadAPOD - ERROR: ffmpeg failed")
+            print(f" apodwallpaper.py -> downloadAPOD - error {ffmpeg.returncode}")
+        remove(filename)
     return result
 
 
@@ -150,21 +174,23 @@ def setWallpaper(apodPath) -> int:
 def main():
     print(" apodwallpaper.py -> main - Init script")
     # Path to APOD image on local storage
-    apodPath = ''
+    apodPath = expanduser("~/.wallpaper.png")
     # Check if new APOD image available
     if checkAPOD(apodPath) == 1:
         if checkConn() == 1:
             exit(1)
         # Get APOD URL
-        apodURL = getAPOD()
+        apodIsImage, apodURL = getAPOD()
         if apodURL is None:
             exit(2)
             # Download image
-        if downloadAPOD(apodURL, apodPath) == 1:
+        if downloadAPOD(apodURL, apodPath, apodIsImage) == 1:
             exit(3)
+
     # Set APOD image
     setWallpaper(apodPath)
     exit(0)
 
 if __name__ == "__main__":
     main()
+

@@ -1,1 +1,3 @@
 requests
+ffmpeg
+youtube-dl

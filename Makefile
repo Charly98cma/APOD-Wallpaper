@@ -5,7 +5,6 @@ init:
 
 config:
 	sed -i 's|ExecStart=.*|ExecStart=python ${PWD}/apodwallpaper.py|g' apodwallpaper.service
-	sed -i "s|apodPath =.*|apodPath = \'${PWD}/apod-image.png\'|g" apodwallpaper.py
 
 .ONESHELL:
 setup:

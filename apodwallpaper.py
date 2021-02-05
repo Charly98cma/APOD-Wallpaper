@@ -72,7 +72,6 @@ None     - Error
 """
 def getAPOD() -> str:
     print(" apodwallpaper.py -> getAPOD - Downloading APOD image URL")
-    photo = None
     # Used DEMO_KEY as the api_key since the constraints are based on IP
     response = reqGet('https://api.nasa.gov/planetary/apod',
                       params={
@@ -83,7 +82,7 @@ def getAPOD() -> str:
         print(" apodwallpaper.py -> getAPOD - Download successful")
         information = response.json()
         if information.get('media_type') == "image":
-            photo = response.json()['hdurl']
+            url = response.json()['hdurl']
             isphoto = True
         elif information.get('media_type') == "video":
             url = response.json()['url']
@@ -183,7 +182,7 @@ def main():
         apodIsImage, apodURL = getAPOD()
         if apodURL is None:
             exit(2)
-            # Download image
+        # Download image
         if downloadAPOD(apodURL, apodPath, apodIsImage) == 1:
             exit(3)
 

@@ -6,7 +6,13 @@ from datetime   import datetime
 from os         import remove
 from os.path    import isfile, getmtime, dirname, abspath, expanduser
 from glob       import glob
+import logging
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format='%(filename)s - %(funcName)s - %(levelname)s: %(message)s',
+    level=logging.INFO
+)
 
 """Function that checks if there's a new APOD image available
 
@@ -21,21 +27,21 @@ Return value (int)
 
 """
 def checkAPOD(apodPath) -> int:
-    print(" apodwallpaper.py -> apodPath - Checking if image need to be updated")
+    logger.info("Checking if image need to be updated")
     res = 1
     if isfile(apodPath):
         # File exists
         lastModDay = datetime.utcfromtimestamp(getmtime(apodPath)).strftime("%Y/%m/%d")
         today = datetime.utcnow().strftime("%Y/%m/%d")
         if lastModDay == today:
-            print(" apodwallpaper.py -> apodPath - Image up-to-date")
+            logger.info("Image up-to-date")
             res = 0
         else:
             # New APOD available => download
-            print(" apodwallpaper.py -> apodPath - New image available")
+            logger.info("New image available")
     else:
         # File doesn't exists => download
-        print(" apodwallpaper.py -> apodPath - No image found")
+        logger.info("No image found")
     return res
 
 
@@ -48,7 +54,7 @@ Return value (int)
 
 """
 def checkConn() -> int:
-    print(" apodwallpaper.py -> checkConn - Checking internet connectivity")
+    logger.info("Checking internet connectivity")
     res = 0
     pingCount = 0
     # Check internet connectivity
@@ -57,9 +63,8 @@ def checkConn() -> int:
         sleep(5)
     if pingCount == 5:
         res = 1
-        print(" apodwallpaper.py -> checkConn - ERROR: No internet connectivity")
+        logger.error("No internet connectivity")
     return res
-
 
 
 """Function that gets the APOD url using the NASA API
@@ -71,7 +76,7 @@ None     - Error
 
 """
 def getAPOD() -> str:
-    print(" apodwallpaper.py -> getAPOD - Downloading APOD image URL")
+    logger.info("Downloading APOD image URL")
     # Used DEMO_KEY as the api_key since the constraints are based on IP
     response = reqGet('https://api.nasa.gov/planetary/apod',
                       params={
@@ -79,7 +84,7 @@ def getAPOD() -> str:
                       })
     # Status code check
     if response.status_code == 200:
-        print(" apodwallpaper.py -> getAPOD - Download successful")
+        logger.info("Download successful")
         information = response.json()
         if information.get('media_type') == "image":
             url = response.json()['hdurl']
@@ -90,10 +95,9 @@ def getAPOD() -> str:
         else:
             raise RuntimeError("APOD is not an image or video")
     else:
-        print(" apodwallpaper.py -> getAPOD - ERROR: Can't get the APOD image URL")
-        print(" apodwallpaper.py -> getAPOD - ERROR CODE:", response.status_code)
+        logger.error("Can't get the APOD image URL")
+        logger.error("Status code:", response.status_code)
     return (isphoto, url)
-
 
 
 """Function used to download the new APOD image, replacing the older one
@@ -110,13 +114,13 @@ Return value (int)
 
 """
 def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
-    print(" apodwallpaper.py -> downloadAPOD - Downloading APOD image")
+    logger.info("Downloading APOD image")
     result = 0
     # Download APOD image
     if apodIsImage:
         response = reqGet(apodURL)
         if response.status_code == 200:
-            print(" apodwallpaper.py -> downloadAPOD - Download successful")
+            logger.info("Download successful")
             # Write new image (overwriting the older one)
             with open(apodPath, 'wb') as apodImage:
                 apodImage.write(response.content)
@@ -124,24 +128,23 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
         else:
             # Error occurred => Print error messages
             result = 1
-            print(" apodwallpaper.py -> downloadAPOD - ERROR: Download of APOD image failed")
-            print(" apodwallpaper.py -> downloadAPOD - ERROR CODE:", response.status_code)
+            logger.error("Download of APOD image failed")
+            logger.error("Status code:", response.status_code)
     else:
-        print(" apodwallpaper.py -> downloadAPOD - Downloading APOD video")
+        logger.info("Downloading APOD video")
         ytdl = subRun(['youtube-dl', apodURL, '-o', '/var/tmp/video'])
         if ytdl.returncode != 0:
             result = 1
-            print(" apodwallpaper.py -> downloadAPOD - ERROR: Cannot download video with youtube-dl")
-            print(f" apodwallpaper.py -> downloadAPOD - stderr is: {ytdl.stderr.decode()}")
+            logger.error("Cannot download video with youtube-dl")
+            logger.error(ytdl.stderr.decode())
         filename = glob("/var/tmp/video.*")[0]
         ffmpeg = subRun(["ffmpeg", "-y", "-i", filename, "-vcodec", "png", "-ss", "11", "-vframes", "1", "-an", "-f", "rawvideo", apodPathi])
         if ffmpeg.returncode != 0:
             result = 1
-            print(" apodwallpaper.py -> downloadAPOD - ERROR: ffmpeg failed")
-            print(f" apodwallpaper.py -> downloadAPOD - error {ffmpeg.returncode}")
+            logger.error("ffmpeg failed")
+            logger.error({ffmpeg.returncode})
         remove(filename)
     return result
-
 
 
 """Function that sets the backgroud/wallpaper using feh
@@ -157,21 +160,21 @@ None - Error
 
 """
 def setWallpaper(apodPath) -> int:
-    print(" apodwallpaper.py -> setWallpaper - Running feh")
+    logger.info("Running feh")
     # Run feh command using the photo local path
     res = subRun(
         ['feh', '--no-fehbg', '--bg-scale', apodPath]
     ).returncode
     # Check return code to print error message
     if res != 0:
-        print(" apodwallpaper.py -> setWallpaper - ERROR: feh failed")
-        print(" apodwallpaper.py -> setWallpaper - ERROR CODE:", res)
+        logger.error("feh failed")
+        logger.error("Status code:", res)
     return res
 
 
 
 def main():
-    print(" apodwallpaper.py -> main - Init script")
+    logger.info("Init script")
     # Path to APOD image on local storage
     apodPath = expanduser("~/.wallpaper.png")
     # Check if new APOD image available

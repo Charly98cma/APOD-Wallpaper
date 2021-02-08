@@ -96,7 +96,7 @@ def getAPOD() -> str:
             raise RuntimeError("APOD is not an image or video")
     else:
         logger.error("Can't get the APOD image URL")
-        logger.error("Status code:", response.status_code)
+        logger.error("Status code: %s", response.status_code)
     return (isphoto, url)
 
 
@@ -129,7 +129,7 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
             # Error occurred => Print error messages
             result = 1
             logger.error("Download of APOD image failed")
-            logger.error("Status code:", response.status_code)
+            logger.error("Status code: %s", response.status_code)
     else:
         logger.info("Downloading APOD video")
         ytdl = subRun(['youtube-dl', apodURL, '-o', '/var/tmp/video'])
@@ -137,13 +137,14 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
             result = 1
             logger.error("Cannot download video with youtube-dl")
             logger.error(ytdl.stderr.decode())
-        filename = glob("/var/tmp/video.*")[0]
-        ffmpeg = subRun(["ffmpeg", "-y", "-i", filename, "-vcodec", "png", "-ss", "11", "-vframes", "1", "-an", "-f", "rawvideo", apodPathi])
-        if ffmpeg.returncode != 0:
-            result = 1
-            logger.error("ffmpeg failed")
-            logger.error({ffmpeg.returncode})
-        remove(filename)
+        else:
+            filename = glob("/var/tmp/video.*")[0]
+            ffmpeg = subRun(["ffmpeg", "-y", "-i", filename, "-vcodec", "png", "-ss", "11", "-vframes", "1", "-an", "-f", "rawvideo", apodPathi])
+            if ffmpeg.returncode != 0:
+                result = 1
+                logger.error("ffmpeg failed")
+                logger.error({ffmpeg.returncode})
+            remove(filename)
     return result
 
 
@@ -168,7 +169,7 @@ def setWallpaper(apodPath) -> int:
     # Check return code to print error message
     if res != 0:
         logger.error("feh failed")
-        logger.error("Status code:", res)
+        logger.error("Status code: %s", res)
     return res
 
 

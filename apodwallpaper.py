@@ -139,7 +139,7 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
             logger.error(ytdl.stderr.decode())
         else:
             filename = glob("/var/tmp/video.*")[0]
-            ffmpeg = subRun(["ffmpeg", "-y", "-i", filename, "-vcodec", "png", "-ss", "11", "-vframes", "1", "-an", "-f", "rawvideo", apodPathi])
+            ffmpeg = subRun(["ffmpeg", "-y", "-i", filename, "-vcodec", "png", "-ss", "11", "-vframes", "1", "-an", "-f", "rawvideo", apodPath])
             if ffmpeg.returncode != 0:
                 result = 1
                 logger.error("ffmpeg failed")

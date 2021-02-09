@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-from subprocess import run       as subRun
-from requests   import get       as reqGet
+from subprocess import run as subRun, DEVNULL as subDevNull
+from requests   import get as reqGet
+
 from time       import sleep
 from datetime   import datetime
 from os         import remove
 from os.path    import isfile, getmtime, dirname, abspath, expanduser
-from glob       import glob
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,8 @@ def checkAPOD(apodPath) -> int:
     res = 1
     if isfile(apodPath):
         # File exists
-        lastModDay = datetime.utcfromtimestamp(getmtime(apodPath)).strftime("%Y/%m/%d")
+        lastModDay = datetime.utcfromtimestamp(
+            getmtime(apodPath)).strftime("%Y/%m/%d")
         today = datetime.utcnow().strftime("%Y/%m/%d")
         if lastModDay == today:
             logger.info("Image up-to-date")
@@ -58,7 +60,8 @@ def checkConn() -> int:
     res = 0
     pingCount = 0
     # Check internet connectivity
-    while pingCount < 5 and subRun(['ping', '-c1', 'google.com']).returncode != 0:
+    while pingCount < 5 and subRun(
+            ['ping', '-c1', 'google.com'], stdout=subDevNull).returncode != 0:
         pingCount += 1
         sleep(5)
     if pingCount == 5:
@@ -114,10 +117,10 @@ Return value (int)
 
 """
 def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
-    logger.info("Downloading APOD image")
     result = 0
     # Download APOD image
     if apodIsImage:
+        logger.info("Downloading APOD image")
         response = reqGet(apodURL)
         if response.status_code == 200:
             logger.info("Download successful")
@@ -132,14 +135,19 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
             logger.error("Status code: %s", response.status_code)
     else:
         logger.info("Downloading APOD video")
-        ytdl = subRun(['youtube-dl', apodURL, '-o', '/var/tmp/video'])
+        filename = '/var/tmp/video/video.mp4'
+        ytdl = subRun(['youtube-dl', apodURL, '-o', filename])
         if ytdl.returncode != 0:
             result = 1
             logger.error("Cannot download video with youtube-dl")
             logger.error(ytdl.stderr.decode())
         else:
-            filename = glob("/var/tmp/video.*")[0]
-            ffmpeg = subRun(["ffmpeg", "-y", "-i", filename, "-vcodec", "png", "-ss", "11", "-vframes", "1", "-an", "-f", "rawvideo", apodPath])
+            ffmpeg = subRun(["ffmpeg", "-y", "-i",
+                             filename, "-vcodec",
+                             "png", "-ss", "0",
+                             "-vframes", "1", "-an",
+                             "-f", "rawvideo", apodPath],
+                            stdout=subDevNull)
             if ffmpeg.returncode != 0:
                 result = 1
                 logger.error("ffmpeg failed")

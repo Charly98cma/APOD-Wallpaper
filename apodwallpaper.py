@@ -171,8 +171,11 @@ None - Error
 def apodNotify(apodName) -> int:
     # Run notify-send with custom params and the name of the APOD image
     res = subRun(
-        ['notify-send', '-u LOW', '-t 5000', '-a APOD-Wallpaper', apodName]
-    ).returncode
+        ['notify-send',
+         '-u', 'low',
+         '-t', '5000',
+         '-a', 'APOD-Wallpaper',
+         apodName]).returncode
     # Check return code to print error message
     if res != 0:
         logger.error("notify-send failed")
@@ -211,17 +214,17 @@ def main():
     # Path to APOD image on local storage
     apodPath = expanduser("~/.wallpaper.png")
     # Check if new APOD image available
-    if checkAPOD(apodPath) == 1:
-        if checkConn() == 1:
+    if checkAPOD(apodPath) != 0:
+        if checkConn() != 0:
             exit(1)
         # Get APOD URL
         apodIsImage, apodURL, apodTitle  = getAPOD()
         if apodURL is None:
             exit(2)
         # Download image
-        if downloadAPOD(apodURL, apodPath, apodIsImage) == 1:
+        if downloadAPOD(apodURL, apodPath, apodIsImage) != 0:
             exit(3)
-        if apodNotify(apodTitle) == 1:
+        if apodNotify(apodTitle) != 0:
             exit(4)
     # Set APOD image
     setWallpaper(apodPath)

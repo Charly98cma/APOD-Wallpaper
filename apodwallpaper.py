@@ -100,7 +100,7 @@ def getAPOD() -> str:
     else:
         logger.error("Can't get the APOD image URL")
         logger.error("Status code: %s", response.status_code)
-    return (isphoto, url)
+    return (isphoto, url, response.json()['title'])
 
 
 """Function used to download the new APOD image, replacing the older one
@@ -156,6 +156,30 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
     return result
 
 
+"""Function that shows the user of the APOD name
+
+Parameters
+----------
+apodName : str - Name of the APOD
+
+Return value (int)
+------------------
+0    - User notified successfully
+None - Error
+
+"""
+def apodNotify(apodName) -> int:
+    # Run notify-send with custom params and the name of the APOD image
+    res = subRun(
+        ['notify-send', '-u LOW', '-t 5000', '-a APOD-Wallpaper', apodName]
+    ).returncode
+    # Check return code to print error message
+    if res != 0:
+        logger.error("notify-send failed")
+        logger.error("Status code: %s", res)
+    return res
+
+
 """Function that sets the backgroud/wallpaper using feh
 
 Parameters
@@ -191,13 +215,14 @@ def main():
         if checkConn() == 1:
             exit(1)
         # Get APOD URL
-        apodIsImage, apodURL = getAPOD()
+        apodIsImage, apodURL, apodTitle  = getAPOD()
         if apodURL is None:
             exit(2)
         # Download image
         if downloadAPOD(apodURL, apodPath, apodIsImage) == 1:
             exit(3)
-
+        if apodNotify(apodTitle) == 1:
+            exit(4)
     # Set APOD image
     setWallpaper(apodPath)
     exit(0)

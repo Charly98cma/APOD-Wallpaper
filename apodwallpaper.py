@@ -1,18 +1,18 @@
-#!/usr/bin/env python
+0#!/usr/bin/env python
 from subprocess import run as subRun, DEVNULL as subDevNull
 from requests   import get as reqGet
-
 from time       import sleep
 from datetime   import datetime
 from os         import remove
 from os.path    import isfile, getmtime, dirname, abspath, expanduser
+from logging    import getLogger as lgGetLogger, \
+    INFO, \
+    basicConfig as lgBasicConfig
 
-import logging
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(
+logger = lgGetLogger(__name__)
+lgBasicConfig(
     format='%(filename)s - %(funcName)s - %(levelname)s: %(message)s',
-    level=logging.INFO
+    level=INFO
 )
 
 """Function that checks if there's a new APOD image available

@@ -144,7 +144,7 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
         else:
             ffmpeg = subRun(["ffmpeg", "-y", "-i",
                              filename, "-vcodec",
-                             "png", "-ss", "0",
+                             "png", "-ss", "1",
                              "-vframes", "1", "-an",
                              "-f", "rawvideo", apodPath],
                             stdout=subDevNull)
@@ -173,7 +173,7 @@ def apodNotify(apodName) -> int:
     res = subRun(
         ['notify-send',
          '-u', 'low',
-         '-t', '5000',
+         '-t', '10000',
          '-a', 'APOD-Wallpaper',
          apodName]).returncode
     # Check return code to print error message

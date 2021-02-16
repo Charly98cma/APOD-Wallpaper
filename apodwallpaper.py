@@ -136,7 +136,9 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
     else:
         logger.info("Downloading APOD video")
         filename = '/var/tmp/video/video.mp4'
-        ytdl = subRun(['youtube-dl', apodURL, '-o', filename])
+        ytdl = subRun(['youtube-dl', apodURL,
+                       '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
+                       '-o', filename])
         if ytdl.returncode != 0:
             result = 1
             logger.error("Cannot download video with youtube-dl")
@@ -152,7 +154,7 @@ def downloadAPOD(apodURL, apodPath, apodIsImage) -> int:
                 result = 1
                 logger.error("ffmpeg failed")
                 logger.error({ffmpeg.returncode})
-            remove(filename)
+                remove(filename)
     return result
 
 
@@ -217,19 +219,18 @@ def main():
     if checkAPOD(apodPath) != 0:
         if checkConn() != 0:
             exit(1)
-        # Get APOD URL
+            # Get APOD URL
         apodIsImage, apodURL, apodTitle  = getAPOD()
         if apodURL is None:
             exit(2)
-        # Download image
+            # Download image
         if downloadAPOD(apodURL, apodPath, apodIsImage) != 0:
             exit(3)
         if apodNotify(apodTitle) != 0:
             exit(4)
-    # Set APOD image
+            # Set APOD image
     setWallpaper(apodPath)
     exit(0)
 
 if __name__ == "__main__":
     main()
-
